@@ -66,8 +66,8 @@ from .exceptions import (
     InvalidCustomerGatewayIdError,
     RulesPerSecurityGroupLimitExceededError,
     MotoNotImplementedError,
-    FilterNotImplementedError
-)
+    FilterNotImplementedError,
+    MalformedAMIIdError)
 from .utils import (
     EC2_RESOURCE_TO_PREFIX,
     EC2_PREFIX_TO_RESOURCE,
@@ -1153,25 +1153,34 @@ class AmiBackend(object):
     def describe_images(self, ami_ids=(), filters=None, exec_users=None, owners=None):
         images = self.amis.values()
 
-        # Limit images by launch permissions
-        if exec_users:
-            tmp_images = []
-            for ami in images:
-                for user_id in exec_users:
-                    if user_id in ami.launch_permission_users:
-                        tmp_images.append(ami)
-            images = tmp_images
+        if len(ami_ids):
+            # boto3 seems to default to just searching based on ami ids if that parameter is passed
+            # and if no images are found, it raises an errors
+            malformed_ami_ids = [ami_id for ami_id in ami_ids if not ami_id.startswith('ami-')]
+            if malformed_ami_ids:
+                raise MalformedAMIIdError(malformed_ami_ids)
 
-        # Limit by owner ids
-        if owners:
-            images = [ami for ami in images if ami.owner_id in owners]
-
-        if ami_ids:
             images = [ami for ami in images if ami.id in ami_ids]
+            if len(images) == 0:
+                    raise InvalidAMIIdError(ami_ids)
+        else:
+            # Limit images by launch permissions
+            if exec_users:
+                tmp_images = []
+                for ami in images:
+                    for user_id in exec_users:
+                        if user_id in ami.launch_permission_users:
+                            tmp_images.append(ami)
+                images = tmp_images
 
-        # Generic filters
-        if filters:
-            return generic_filter(filters, images)
+            # Limit by owner ids
+            if owners:
+                images = [ami for ami in images if ami.owner_id in owners]
+
+            # Generic filters
+            if filters:
+                return generic_filter(filters, images)
+
         return images
 
     def deregister_image(self, ami_id):
