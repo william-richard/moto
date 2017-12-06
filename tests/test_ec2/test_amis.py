@@ -690,8 +690,13 @@ def test_ami_filter_wildcard():
     ec2 = boto3.resource('ec2', region_name='us-west-1')
     instance = ec2.create_instances(ImageId='ami-1234abcd', MinCount=1, MaxCount=1)[0]
     image = instance.create_image(Name='test-image')
-    filter_result = list(ec2.images.filter(Owners=['111122223333'], Filters=[{'Name':'name', 'Values':['test*']}]))
-    assert filter_result == [image]
+
+    # create an image with the same owner but will not match the filter
+    instance.create_image(Name='not-matching-image')
+
+    filter_result = list(
+        ec2.images.filter(Owners=['111122223333'], Filters=[{'Name': 'name', 'Values': ['test*']}]))
+    filter_result.should.equal([image])
 
 
 @mock_ec2

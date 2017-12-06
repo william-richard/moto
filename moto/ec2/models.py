@@ -1029,8 +1029,7 @@ class TagBackend(object):
 
 class Ami(TaggedEC2Resource):
     def __init__(self, ec2_backend, ami_id, instance=None, source_ami=None,
-                 name=None, description=None, owner_id=None,
-
+                 name=None, description=None, owner_id=111122223333,
                  public=False, virtualization_type=None, architecture=None,
                  state='available', creation_date=None, platform=None,
                  image_type='machine', image_location=None, hypervisor=None,
@@ -1132,7 +1131,7 @@ class AmiBackend(object):
             ami_id = ami['ami_id']
             self.amis[ami_id] = Ami(self, **ami)
 
-    def create_image(self, instance_id, name=None, description=None, owner_id=None):
+    def create_image(self, instance_id, name=None, description=None, owner_id='111122223333'):
         # TODO: check that instance exists and pull info from it.
         ami_id = random_ami_id()
         instance = self.get_instance(instance_id)
