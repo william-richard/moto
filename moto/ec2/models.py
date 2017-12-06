@@ -1034,7 +1034,7 @@ class Ami(TaggedEC2Resource):
                  public=False, virtualization_type=None, architecture=None,
                  state='available', creation_date=None, platform=None,
                  image_type='machine', image_location=None, hypervisor=None,
-                 root_device_type=None, root_device_name=None, sriov='simple',
+                 root_device_type='standard', root_device_name='/dev/sda1', sriov='simple',
                  region_name='us-east-1a'
                  ):
         self.ec2_backend = ec2_backend
