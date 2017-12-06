@@ -83,6 +83,11 @@ def test_ami_create_and_delete():
 @mock_ec2_deprecated
 def test_ami_copy():
     conn = boto.ec2.connect_to_region("us-west-1")
+
+    initial_volume_count = 34
+    conn.get_all_volumes().should.have.length_of(initial_volume_count)
+    conn.get_all_snapshots().should.have.length_of(initial_volume_count)
+
     reservation = conn.run_instances('ami-1234abcd')
     instance = reservation.instances[0]
 
@@ -95,7 +100,8 @@ def test_ami_copy():
     # the image_id to fetch the full info.
     with assert_raises(EC2ResponseError) as ex:
         copy_image_ref = conn.copy_image(
-            source_image.region.name, source_image.id, "test-copy-ami", "this is a test copy ami", dry_run=True)
+            source_image.region.name, source_image.id, "test-copy-ami", "this is a test copy ami",
+            dry_run=True)
     ex.exception.error_code.should.equal('DryRunOperation')
     ex.exception.status.should.equal(400)
     ex.exception.message.should.equal(
@@ -114,8 +120,8 @@ def test_ami_copy():
     copy_image.platform.should.equal(source_image.platform)
 
     # Validate auto-created volume and snapshot
-    conn.get_all_volumes().should.have.length_of(2)
-    conn.get_all_snapshots().should.have.length_of(2)
+    conn.get_all_volumes().should.have.length_of(initial_volume_count + 2)
+    conn.get_all_snapshots().should.have.length_of(initial_volume_count + 2)
 
     copy_image.block_device_mapping.current_value.snapshot_id.should_not.equal(
         source_image.block_device_mapping.current_value.snapshot_id)
