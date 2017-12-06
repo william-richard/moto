@@ -4,10 +4,9 @@ import tests.backport_assert_raises  # noqa
 from nose.tools import assert_raises
 
 import boto
-import boto3
 import boto.ec2
 import boto3
-from boto.exception import EC2ResponseError, EC2ResponseError
+from boto.exception import EC2ResponseError
 
 import sure  # noqa
 
@@ -446,18 +445,17 @@ def test_ami_attribute_user_permissions():
         **REMOVE_USERS_ARGS).should_not.throw(EC2ResponseError)
 
 
-@mock_ec2_deprecated
+@mock_ec2
 def test_ami_describe_executable_users():
     conn = boto3.client('ec2', region_name='us-east-1')
     ec2 = boto3.resource('ec2', 'us-east-1')
     ec2.create_instances(ImageId='',
                          MinCount=1,
                          MaxCount=1)
-    response = conn.describe_instances(Filters=[{'Name': 'instance-state-name','Values': ['running']}])
+    response = conn.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
     instance_id = response['Reservations'][0]['Instances'][0]['InstanceId']
     image_id = conn.create_image(InstanceId=instance_id,
-                                 Name='TestImage',)['ImageId']
-
+                                 Name='TestImage', )['ImageId']
 
     USER1 = '123456789011'
 
@@ -479,18 +477,17 @@ def test_ami_describe_executable_users():
     images[0]['ImageId'].should.equal(image_id)
 
 
-@mock_ec2_deprecated
+@mock_ec2
 def test_ami_describe_executable_users_negative():
     conn = boto3.client('ec2', region_name='us-east-1')
     ec2 = boto3.resource('ec2', 'us-east-1')
     ec2.create_instances(ImageId='',
                          MinCount=1,
                          MaxCount=1)
-    response = conn.describe_instances(Filters=[{'Name': 'instance-state-name','Values': ['running']}])
+    response = conn.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
     instance_id = response['Reservations'][0]['Instances'][0]['InstanceId']
     image_id = conn.create_image(InstanceId=instance_id,
                                  Name='TestImage')['ImageId']
-
 
     USER1 = '123456789011'
     USER2 = '113355789012'
@@ -500,6 +497,7 @@ def test_ami_describe_executable_users_negative():
                      'OperationType': 'add',
                      'UserIds': [USER1]}
 
+    # Add users and get no images
     # Add users and get no images
     conn.modify_image_attribute(**ADD_USER_ARGS)
 
@@ -512,18 +510,17 @@ def test_ami_describe_executable_users_negative():
     images.should.have.length_of(0)
 
 
-@mock_ec2_deprecated
+@mock_ec2
 def test_ami_describe_executable_users_and_filter():
     conn = boto3.client('ec2', region_name='us-east-1')
     ec2 = boto3.resource('ec2', 'us-east-1')
     ec2.create_instances(ImageId='',
                          MinCount=1,
                          MaxCount=1)
-    response = conn.describe_instances(Filters=[{'Name': 'instance-state-name','Values': ['running']}])
+    response = conn.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
     instance_id = response['Reservations'][0]['Instances'][0]['InstanceId']
     image_id = conn.create_image(InstanceId=instance_id,
-                                 Name='ImageToDelete',)['ImageId']
-
+                                 Name='ImageToDelete', )['ImageId']
 
     USER1 = '123456789011'
 
